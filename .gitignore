@@ -1,0 +1,14 @@
+# Окружение
+r.txt
+.env
+venv/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Артефакты прогонов
+*.db
+*.sqlite
+newman/
+report.html

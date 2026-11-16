@@ -1,0 +1,50 @@
+name: QA checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  docs-and-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Сгенерировать тест-кейсы из CSV
+        run: python scripts/build_test_cases_md.py
+      - name: Проверить, что артефакты актуальны
+        run: git diff --exit-code docs/test-cases.md
+      - name: Проверить SQL-запросы
+        run: python scripts/check_sql.py
+
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Установить зависимости
+        run: pip install -r tests/requirements.txt
+      - name: pytest
+        run: pytest
+
+  newman:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Установить Newman
+        run: npm install -g newman
+      - name: Прогнать Postman-коллекцию
+        run: >
+          newman run postman/restful-booker.postman_collection.json
+          -e postman/restful-booker.postman_environment.json
+          --timeout-request 15000
